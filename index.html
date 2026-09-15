@@ -1,0 +1,1721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PhishGuard</title>
+  <meta name="description" content="Enterprise Browser Security Hub and Chrome Extension with real-time URL monitoring, deterministic rules engine, client fleet management, and automated threat interception.">
+  <meta property="og:title" content="PhishGuard">
+  <meta property="og:description" content="Enterprise Browser Security Hub and Chrome Extension with real-time URL monitoring, deterministic rules engine, client fleet management, and automated threat interception.">
+  <link rel="icon" type="image/png" href="icon.png">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    :root {
+      --bg-canvas: #090e17;
+      --bg-sidebar: #0f172a;
+      --bg-card: #141f36;
+      --bg-card-hover: #192744;
+      --bg-input: #0b1322;
+      --border: #1e2e4a;
+      --border-accent: #2563eb;
+      --text-main: #f1f5f9;
+      --text-muted: #8494ab;
+      --text-dim: #50617a;
+      --accent-cyan: #06b6d4;
+      --accent-blue: #38bdf8;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-canvas);
+      color: var(--text-main);
+      min-height: 100vh;
+      line-height: 1.5;
+      display: flex;
+      overflow-x: hidden;
+    }
+
+    /* Sidebar Navigation */
+    aside.sidebar {
+      width: 250px;
+      min-width: 250px;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      z-index: 50;
+    }
+
+    .sidebar-header {
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+    }
+
+    .sidebar-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #38bdf8;
+      letter-spacing: -0.01em;
+    }
+
+    .sidebar-subtitle {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    nav.sidebar-nav {
+      flex: 1;
+      padding: 14px 10px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .nav-label {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-dim);
+      padding: 10px 10px 4px 10px;
+      font-weight: 700;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.86rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s;
+    }
+
+    .nav-item:hover {
+      background: var(--bg-card);
+      color: var(--text-main);
+    }
+
+    .nav-item.active {
+      background: #1e293b;
+      color: #38bdf8;
+      border-color: #334155;
+      font-weight: 600;
+    }
+
+    .nav-badge {
+      margin-left: auto;
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--accent-red);
+      font-size: 0.7rem;
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-weight: 700;
+    }
+
+    .sidebar-footer {
+      padding: 14px;
+      border-top: 1px solid var(--border);
+      background: rgba(11, 19, 34, 0.5);
+    }
+
+    .admin-pill {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.78rem;
+    }
+
+    .admin-user {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .user-avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #2563eb;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    /* Main Content Area */
+    .app-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    /* Top Bar */
+    header.topbar {
+      background: var(--bg-sidebar);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .page-heading {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .sse-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.74rem;
+      color: var(--text-muted);
+    }
+
+    .sse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      animation: pulseDot 2s infinite;
+    }
+
+    .sse-dot.disconnected {
+      background: var(--accent-red);
+      animation: none;
+    }
+
+    @keyframes pulseDot {
+      0% { opacity: 0.4; }
+      50% { opacity: 1; }
+      100% { opacity: 0.4; }
+    }
+
+    .btn-header {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .btn-header:hover {
+      background: var(--bg-card-hover);
+      border-color: #38bdf8;
+    }
+
+    .btn-primary {
+      background: #2563eb;
+      border: 1px solid #3b82f6;
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: #1d4ed8;
+    }
+
+    /* Views Layout */
+    .content-container {
+      padding: 24px;
+      max-width: 1440px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .tab-view {
+      display: none;
+    }
+
+    .tab-view.active {
+      display: block;
+      animation: fadeIn 0.15s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(3px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Cards & Grids */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .stat-meta {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-title {
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .stat-number {
+      font-size: 1.8rem;
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--text-main);
+    }
+
+    .stat-badge {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .stat-icon-wrap {
+      width: 46px;
+      height: 46px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+    }
+
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-title {
+      font-size: 0.98rem;
+      font-weight: 600;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    /* Tables */
+    .table-responsive {
+      overflow-x: auto;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.84rem;
+      text-align: left;
+    }
+
+    table.data-table th {
+      background: #0f172a;
+      color: var(--text-muted);
+      font-weight: 600;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    table.data-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(30, 46, 74, 0.5);
+      color: #cbd5e1;
+    }
+
+    table.data-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    table.data-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Pills & Badges */
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .badge-allow { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-warning { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-block { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .badge-online { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+    .badge-offline { background: rgba(100, 116, 139, 0.2); color: #94a3b8; }
+    .badge-critical { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+
+    /* Filters Bar */
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 16px;
+      align-items: center;
+    }
+
+    .filter-input {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 7px 12px;
+      color: var(--text-main);
+      font-size: 0.84rem;
+      outline: none;
+      min-width: 220px;
+    }
+
+    .filter-input:focus {
+      border-color: #38bdf8;
+    }
+
+    .filter-select {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 7px 12px;
+      color: var(--text-main);
+      font-size: 0.84rem;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* Live Feed Ticker */
+    .feed-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 520px;
+      overflow-y: auto;
+    }
+
+    .feed-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      font-size: 0.82rem;
+      animation: slideIn 0.2s ease-out;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .feed-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      overflow: hidden;
+    }
+
+    .feed-url {
+      color: #38bdf8;
+      font-family: monospace;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+      max-width: 480px;
+    }
+
+    .feed-meta {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+    }
+
+    /* Modals */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-card {
+      background: var(--bg-sidebar);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 580px;
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    }
+
+    .modal-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-control {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      color: var(--text-main);
+      font-size: 0.88rem;
+      outline: none;
+    }
+
+    .form-control:focus {
+      border-color: #38bdf8;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Simulator panel iframe container */
+    .simulator-container {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 20px;
+    }
+
+    @media (max-width: 1024px) {
+      aside.sidebar { display: none; }
+      .simulator-container { grid-template-columns: 1fr; }
+    }
+
+    .sim-phone-frame {
+      background: #000;
+      border: 3px solid #334155;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .sim-bar {
+      background: #1e293b;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      color: #94a3b8;
+      border-bottom: 1px solid #334155;
+    }
+
+    iframe.sim-iframe {
+      width: 100%;
+      height: 480px;
+      border: none;
+      background: #131f33;
+    }
+
+    /* Toast Notification */
+    #toastMessage {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1e293b;
+      color: #fff;
+      border: 1px solid #3b82f6;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      z-index: 300;
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Print and Report Styles */
+    .report-paper {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    }
+
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #0f172a !important;
+      }
+      aside.sidebar, header.topbar, .panel-actions, .filter-bar, .modal-backdrop, #toastMessage, .btn-header, .no-print {
+        display: none !important;
+      }
+      .app-main {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 0 !important;
+      }
+      .content-container {
+        padding: 0 !important;
+        max-width: 100% !important;
+      }
+      .tab-view {
+        display: none !important;
+      }
+      #tab-reports {
+        display: block !important;
+      }
+      .report-paper {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+      }
+      .report-paper table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        color: #0f172a !important;
+      }
+      .report-paper th {
+        background: #f1f5f9 !important;
+        color: #0f172a !important;
+        border: 1px solid #cbd5e1 !important;
+        padding: 8px !important;
+      }
+      .report-paper td {
+        border: 1px solid #e2e8f0 !important;
+        color: #334155 !important;
+        padding: 8px !important;
+      }
+      .stat-card {
+        border: 1px solid #cbd5e1 !important;
+        background: #f8fafc !important;
+        box-shadow: none !important;
+      }
+      .stat-title { color: #64748b !important; }
+      .stat-number { color: #0f172a !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Login Gate -->
+  <div id="loginGate" style="display:flex; min-height:100vh; align-items:center; justify-content:center; background:radial-gradient(circle at top, #0f172a, #020617);">
+    <form id="loginForm" style="width:100%; max-width:360px; background:#0f172a; border:1px solid #1e293b; border-radius:14px; padding:32px; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:18px;">
+        <img src="icon.png" alt="FortiNex" style="width:36px; height:36px;">
+        <div>
+          <div style="font-weight:700; color:#f1f5f9; font-size:1.05rem;">FortiNex PhishGuard</div>
+          <div style="font-size:0.75rem; color:#94a3b8;">Enterprise Security Hub — Sign In</div>
+        </div>
+      </div>
+      <label style="display:block; font-size:0.78rem; color:#94a3b8; margin-bottom:4px;">Username</label>
+      <input type="text" id="loginUsername" autocomplete="username" required
+        style="width:100%; padding:10px 12px; margin-bottom:14px; border-radius:8px; border:1px solid #1e293b; background:#020617; color:#f1f5f9;">
+      <label style="display:block; font-size:0.78rem; color:#94a3b8; margin-bottom:4px;">Password</label>
+      <input type="password" id="loginPassword" autocomplete="current-password" required
+        style="width:100%; padding:10px 12px; margin-bottom:18px; border-radius:8px; border:1px solid #1e293b; background:#020617; color:#f1f5f9;">
+      <div id="loginError" style="display:none; color:#f87171; font-size:0.8rem; margin-bottom:12px;"></div>
+      <button type="submit" id="loginSubmitBtn" style="width:100%; padding:11px; border:none; border-radius:8px; background:#2563eb; color:#fff; font-weight:600; cursor:pointer;">Sign In</button>
+    </form>
+  </div>
+
+  <div id="appShellRoot" style="display:none;">
+
+  <!-- Left Sidebar Navigation -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="icon.png" alt="PhishGuard Shield" class="sidebar-logo">
+      <div>
+        <div class="sidebar-title">PhishGuard</div>
+        <div class="sidebar-subtitle">Enterprise Security Hub</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-label">Monitoring & Fleet</div>
+      <a class="nav-item active" data-tab="overview">
+        <span>📊</span> Overview Dashboard
+      </a>
+      <a class="nav-item" data-tab="systems">
+        <span>💻</span> Enrolled Systems
+        <span class="nav-badge" id="onlineBadgeCount">0</span>
+      </a>
+      <a class="nav-item" data-tab="url-history">
+        <span>🔗</span> URL History
+      </a>
+
+      <div class="nav-label">Threat Governance</div>
+      <a class="nav-item" data-tab="rules">
+        <span>🛡️</span> Security Rules Policy
+      </a>
+      <a class="nav-item" data-tab="alerts">
+        <span>🚨</span> Threat Alerts
+        <span class="nav-badge" id="alertBadgeCount">0</span>
+      </a>
+
+      <div class="nav-label">Operations & Reporting</div>
+      <a class="nav-item" data-tab="install">
+        <span>📥</span> Install Extension
+      </a>
+      <a class="nav-item" data-tab="reports">
+        <span>📈</span> Reports & Analytics
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="admin-pill">
+        <div class="admin-user">
+          <div class="user-avatar" id="avatarLetter">A</div>
+          <div>
+            <div style="font-weight:600; color:var(--text-main);" id="sidebarUsername">Admin</div>
+            <div style="font-size:0.68rem; color:var(--text-muted);" id="sidebarRole">Security Lead</div>
+          </div>
+        </div>
+        <button class="btn-header" id="btnAdminLogout" title="Logout" style="padding:4px 8px; font-size:0.75rem;">🚪</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content Viewport -->
+  <main class="app-main">
+    <!-- Top Bar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="page-heading" id="currentTabTitle">Enterprise Overview</h1>
+      </div>
+      <div class="topbar-right">
+        <div class="sse-indicator" id="sseStatus">
+          <span class="sse-dot" id="sseDot"></span>
+          <span id="sseLabel">Live Sync Active</span>
+        </div>
+        <!-- Real-time Security Alerts Notification Bell -->
+        <div class="notification-bell-container" id="notifBellContainer" style="position:relative;">
+          <button class="btn-header" id="btnNotificationBell" title="Security Alerts" style="position:relative; padding:7px 12px; font-size:1rem; display:flex; align-items:center; gap:6px;">
+            <span>🔔</span>
+            <span class="badge-pill badge-block" id="notifBellBadge" style="display:none; font-size:0.68rem; padding:1px 6px; border-radius:10px; font-weight:700;">0</span>
+          </button>
+          <div class="notif-dropdown" id="notifBellDropdown" style="display:none; position:absolute; right:0; top:calc(100% + 8px); width:350px; max-height:420px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); box-shadow:0 12px 32px rgba(0,0,0,0.6); z-index:1000; overflow:hidden; flex-direction:column;">
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid var(--border); background:rgba(0,0,0,0.25);">
+              <div style="font-weight:700; font-size:0.85rem; color:var(--text-main); display:flex; align-items:center; gap:6px;">
+                <span>🔔</span> Security Alerts
+                <span id="notifDropdownBadge" class="badge-pill badge-block" style="font-size:0.7rem; padding:1px 6px;">0</span>
+              </div>
+              <button class="btn-header" id="btnNotifViewAll" style="font-size:0.72rem; padding:3px 8px;">View All Alerts</button>
+            </div>
+            <div id="notifDropdownList" style="overflow-y:auto; max-height:300px; padding:6px 0;">
+              <div style="text-align:center; padding:20px; color:var(--text-muted); font-size:0.82rem;">No alerts available</div>
+            </div>
+          </div>
+        </div>
+        <button class="btn-header" id="btnRefreshAll">
+          <span>🔄</span> Refresh
+        </button>
+        <button class="btn-header" id="btnTestUrlCheckModal">
+          <span>⚡</span> Check URL
+        </button>
+        <button class="btn-header btn-primary" id="btnDownloadExtTop">
+          <span>📥</span> Download Extension (.ZIP)
+        </button>
+      </div>
+    </header>
+
+    <div class="content-container">
+
+      <!-- ======================================================== -->
+      <!-- TAB 1: OVERVIEW DASHBOARD -->
+      <!-- ======================================================== -->
+      <section class="tab-view active" id="tab-overview">
+        <!-- Key Metrics Cards -->
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-meta">
+              <span class="stat-title">Total Enrolled Systems</span>
+              <span class="stat-number" id="cardTotalClients">0</span>
+              <span class="stat-badge" id="cardOnlineClients">0 online now</span>
+            </div>
+            <div class="stat-icon-wrap" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8;">💻</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-meta">
+              <span class="stat-title">URLs Monitored</span>
+              <span class="stat-number" id="cardTotalUrls">0</span>
+              <span class="stat-badge" id="cardAllowedUrls">0 allowed</span>
+            </div>
+            <div class="stat-icon-wrap" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">🌐</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-meta">
+              <span class="stat-title">Phishing Intercepted</span>
+              <span class="stat-number" id="cardBlockedUrls" style="color: #ef4444;">0</span>
+              <span class="stat-badge" id="cardWarningUrls">0 warnings flagged</span>
+            </div>
+            <div class="stat-icon-wrap" style="background: rgba(239, 68, 68, 0.15); color: #ef4444;">🛑</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-meta">
+              <span class="stat-title">Active Security Alerts</span>
+              <span class="stat-number" id="cardActiveAlerts" style="color: #f59e0b;">0</span>
+              <span class="stat-badge" id="cardCriticalAlerts">0 critical</span>
+            </div>
+            <div class="stat-icon-wrap" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">🚨</div>
+          </div>
+        </div>
+
+        <!-- Telemetry Classification Breakdown (Real Database Counts) -->
+        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:16px 20px; margin-bottom:24px; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:16px;">
+          <div>
+            <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted);">
+              URL Classification Breakdown (Live Extension Telemetry)
+            </div>
+            <div style="font-size:1.05rem; font-weight:700; color:var(--text-main); margin-top:3px;">
+              <span id="overviewClassTotal">0</span> URLs Evaluated by Extension
+            </div>
+          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:12px;">
+            <div style="display:flex; align-items:center; gap:8px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); padding:8px 16px; border-radius:var(--radius-sm);">
+              <span style="font-size:1.2rem;">🛡️</span>
+              <div>
+                <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:600;">Safe URLs</div>
+                <div style="font-size:1.15rem; font-weight:800; color:#10b981;" id="overviewClassSafe">0</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); padding:8px 16px; border-radius:var(--radius-sm);">
+              <span style="font-size:1.2rem;">⚠️</span>
+              <div>
+                <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:600;">Suspicious URLs</div>
+                <div style="font-size:1.15rem; font-weight:800; color:#f59e0b;" id="overviewClassSuspicious">0</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); padding:8px 16px; border-radius:var(--radius-sm);">
+              <span style="font-size:1.2rem;">⛔</span>
+              <div>
+                <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:600;">Phishing URLs</div>
+                <div style="font-size:1.15rem; font-weight:800; color:#ef4444;" id="overviewClassPhishing">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px;">
+          <!-- Recent URL Events -->
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title"><span>🕒</span> Recent Real-Time Navigation Events</div>
+              <button class="btn-header" onclick="switchTab('url-history')">View Full History →</button>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Timestamp</th>
+                    <th>System / Client</th>
+                    <th>Classification</th>
+                    <th>Destination Domain</th>
+                    <th>Verdict</th>
+                  </tr>
+                </thead>
+                <tbody id="overviewRecentEventsTbody">
+                  <tr><td colspan="5" style="text-align:center; color:var(--text-muted);">No navigation events recorded yet.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Top Blocked Threat Domains -->
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title"><span>🎯</span> Top Blocked Threat Domains</div>
+              <button class="btn-header" onclick="switchTab('rules')">Manage Rules</button>
+            </div>
+            <div id="overviewTopBlockedList" style="display:flex; flex-direction:column; gap:8px;">
+              <div style="font-size:0.84rem; color:var(--text-muted); text-align:center; padding:20px;">No blocked domains yet</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- TAB 2: ENROLLED SYSTEMS (FLEET MANAGEMENT) -->
+      <!-- ======================================================== -->
+      <section class="tab-view" id="tab-systems">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span>💻</span> Enterprise Endpoint Fleet (Registered Chrome Extensions)
+            </div>
+            <div class="panel-actions">
+              <button class="btn-header" id="btnRefreshSystems">🔄 Refresh Status</button>
+              <button class="btn-header btn-primary" onclick="openEnrollModal()">+ Enroll New System</button>
+            </div>
+          </div>
+
+          <div class="filter-bar">
+            <input type="text" id="filterSystemSearch" class="filter-input" placeholder="Search system name, client ID, hostname, IP...">
+            <select id="filterSystemStatus" class="filter-select">
+              <option value="ALL">All Statuses</option>
+              <option value="ONLINE">Online Only</option>
+              <option value="OFFLINE">Offline Only</option>
+            </select>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>System Name / Hostname</th>
+                  <th>Client ID</th>
+                  <th>OS & Browser</th>
+                  <th>Extension Ver</th>
+                  <th>IP Address</th>
+                  <th>Last Seen</th>
+                  <th>Events / Blocked</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="systemsTableBody">
+                <tr><td colspan="9" style="text-align:center; padding:20px;">Loading systems...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- TAB 3: URL HISTORY -->
+      <!-- ======================================================== -->
+      <section class="tab-view" id="tab-url-history">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title"><span>🔗</span> Central URL Audit Trail</div>
+            <div class="panel-actions">
+              <button class="btn-header" id="btnExportUrlHistoryCsv">📥 Export CSV</button>
+              <button class="btn-header" id="btnRefreshUrlHistory">🔄 Refresh</button>
+            </div>
+          </div>
+
+          <div class="filter-bar">
+            <input type="text" id="urlHistorySearch" class="filter-input" placeholder="Search URL, domain, or reason...">
+            <select id="urlHistoryDecision" class="filter-select">
+              <option value="ALL">All Decisions</option>
+              <option value="ALLOW">ALLOW Only</option>
+              <option value="WARNING">WARNING Only</option>
+              <option value="BLOCK">BLOCK Only</option>
+            </select>
+            <select id="urlHistoryThreatLevel" class="filter-select">
+              <option value="ALL">All Threat Levels</option>
+              <option value="SAFE">SAFE</option>
+              <option value="LOW">LOW</option>
+              <option value="MEDIUM">MEDIUM</option>
+              <option value="HIGH">HIGH</option>
+              <option value="CRITICAL">CRITICAL</option>
+            </select>
+            <select id="urlHistoryClientSelect" class="filter-select">
+              <option value="">All Clients</option>
+            </select>
+            <button class="btn-header btn-primary" id="btnApplyUrlFilters">Apply Filters</button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Client / System</th>
+                  <th>Classification</th>
+                  <th>Destination Domain</th>
+                  <th>Full URL</th>
+                  <th>Verdict / Decision</th>
+                  <th>Matched Policy / Reason</th>
+                </tr>
+              </thead>
+              <tbody id="urlHistoryTableBody">
+                <tr><td colspan="7" style="text-align:center; padding:20px;">Loading URL history...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px; font-size:0.8rem; color:var(--text-muted);">
+            <div id="urlHistoryPaginationInfo">Showing 0 of 0 events</div>
+            <div style="display:flex; gap:6px;">
+              <button class="btn-header" id="btnUrlHistoryPrev">« Previous</button>
+              <button class="btn-header" id="btnUrlHistoryNext">Next »</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- TAB 4: SECURITY RULES POLICY -->
+      <!-- ======================================================== -->
+      <section class="tab-view" id="tab-rules">
+        <!-- SECTION A: WHITELIST URLS -->
+        <div class="panel" style="border-top: 3px solid #10b981; margin-bottom: 20px;">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title" style="color: #10b981;"><span>🛡️</span> SECTION A — WHITELIST URLS</div>
+              <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">
+                URLs and domains added here are permanently treated as <strong>SAFE / ALLOWED</strong>. The Chrome extension bypasses phishing warnings, immediately permits navigation, and logs safe telemetry.
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick-Add Whitelist Rule Form -->
+          <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px; background:var(--bg-input); padding:12px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+            <input type="text" id="whitelistUrlInput" class="filter-input" style="flex:1; min-width:240px;" placeholder="Enter URL or domain to Whitelist (e.g. https://example.com or example.com)">
+            <input type="text" id="whitelistDescInput" class="filter-input" style="flex:1; min-width:200px;" placeholder="Reason / Description (e.g. Official Corporate Partner)">
+            <button class="btn-header btn-primary" id="btnAddWhitelistBtn" style="background:#10b981; border-color:#059669; padding:8px 16px;">
+              <span>💾</span> Save / Add Whitelist Rule
+            </button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Decision</th>
+                  <th>Whitelist Pattern / Domain</th>
+                  <th>Description</th>
+                  <th>Priority</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="whitelistTableBody">
+                <tr><td colspan="6" style="text-align:center; padding:16px; color:var(--text-muted);">Loading whitelist rules...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SECTION B: PHISHING URLS -->
+        <div class="panel" style="border-top: 3px solid #ef4444; margin-bottom: 20px;">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title" style="color: #ef4444;"><span>🛑</span> SECTION B — PHISHING URLS</div>
+              <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">
+                URLs and domains manually added here are treated as <strong>PHISHING</strong>. The Chrome extension intercepts the navigation, sounds the alarm, displays the warning screen, and logs 1 phishing detection + 1 alert to the server.
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick-Add Phishing Rule Form -->
+          <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px; background:var(--bg-input); padding:12px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+            <input type="text" id="phishingUrlInput" class="filter-input" style="flex:1; min-width:240px;" placeholder="Enter URL or domain to Block as Phishing (e.g. http://example-phishing-test.com)">
+            <input type="text" id="phishingDescInput" class="filter-input" style="flex:1; min-width:200px;" placeholder="Threat campaign notes (e.g. Credential Harvester Campaign)">
+            <button class="btn-header btn-primary" id="btnAddPhishingBtn" style="background:#ef4444; border-color:#dc2626; padding:8px 16px;">
+              <span>💾</span> Save / Add Phishing Rule
+            </button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Decision</th>
+                  <th>Phishing Pattern / Domain</th>
+                  <th>Description</th>
+                  <th>Severity</th>
+                  <th>Priority</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="phishingTableBody">
+                <tr><td colspan="7" style="text-align:center; padding:16px; color:var(--text-muted);">Loading phishing rules...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- MASTER RULES POLICY OVERVIEW -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title"><span>⚙️</span> Master Security Policy Rules</div>
+            <div class="panel-actions">
+              <button class="btn-header btn-primary" id="btnOpenNewRuleModal">+ Advanced Policy Rule</button>
+            </div>
+          </div>
+          <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:14px;">
+            Rules are evaluated in order of priority (higher number wins). Exact, wildcard, and path patterns are enforced across all enrolled Chrome extensions.
+          </p>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Decision Type</th>
+                  <th>Pattern</th>
+                  <th>Target Type</th>
+                  <th>Priority</th>
+                  <th>Severity</th>
+                  <th>Description</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="rulesTableBody">
+                <tr><td colspan="8" style="text-align:center; padding:20px;">Loading security rules...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- TAB 6: SECURITY ALERTS -->
+      <!-- ======================================================== -->
+      <section class="tab-view" id="tab-alerts">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title"><span>🚨</span> Endpoint Security Alerts</div>
+            <div class="panel-actions">
+              <button class="btn-header" id="btnExportAlertsCsv">📥 Export CSV</button>
+              <button class="btn-header" id="btnRefreshAlerts">🔄 Refresh</button>
+            </div>
+          </div>
+
+          <div class="filter-bar">
+            <select id="filterAlertStatus" class="filter-select">
+              <option value="ALL">All Statuses</option>
+              <option value="NEW" selected>NEW Only</option>
+              <option value="ACKNOWLEDGED">Acknowledged</option>
+              <option value="RESOLVED">Resolved</option>
+            </select>
+            <select id="filterAlertSeverity" class="filter-select">
+              <option value="ALL">All Severities</option>
+              <option value="CRITICAL">Critical Only</option>
+              <option value="HIGH">High</option>
+              <option value="MEDIUM">Medium</option>
+            </select>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Timestamp</th>
+                  <th>Client / System</th>
+                  <th>Domain</th>
+                  <th>Severity</th>
+                  <th>Type</th>
+                  <th>Threat Reason</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="alertsTableBody">
+                <tr><td colspan="8" style="text-align:center; padding:20px;">Loading alerts...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- TAB 6: REPORTS & EXPORT -->
+      <!-- ======================================================== -->
+      <section class="tab-view" id="tab-reports">
+        <div class="panel no-print" style="margin-bottom: 20px;">
+          <div class="panel-header">
+            <div class="panel-title"><span>📈</span> Threat Intelligence Reports & Analytics</div>
+            <div class="panel-actions">
+              <button class="btn-header" id="btnRefreshReport">🔄 Refresh</button>
+            </div>
+          </div>
+
+          <!-- Report Scope Selection Workflow -->
+          <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:18px;">
+            <div style="font-size:0.88rem; font-weight:700; color:var(--text-main); margin-bottom:12px;">
+              Report Scope:
+            </div>
+            <div style="display:flex; align-items:center; gap:24px; margin-bottom:14px;">
+              <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.88rem; color:var(--text-main); font-weight:500;">
+                <input type="radio" name="reportScopeRadio" id="scopeAllRadio" value="ALL" checked style="accent-color:#38bdf8; width:17px; height:17px;">
+                <span>All Systems (Aggregated Fleet)</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.88rem; color:var(--text-main); font-weight:500;">
+                <input type="radio" name="reportScopeRadio" id="scopeSingleRadio" value="SINGLE" style="accent-color:#38bdf8; width:17px; height:17px;">
+                <span>Single System</span>
+              </label>
+            </div>
+
+            <!-- Single System Selector (shown when Single System is selected) -->
+            <div id="singleSystemPickerContainer" style="display:none; margin-bottom:16px; padding:12px; background:var(--bg-input); border:1px solid var(--border); border-radius:var(--radius-sm);">
+              <label style="font-size:0.82rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:6px;">
+                System:
+              </label>
+              <select id="reportSingleSystemSelect" class="filter-select" style="min-width:320px; max-width:100%; font-size:0.88rem;">
+                <option value="">Select System ▼</option>
+              </select>
+            </div>
+
+            <!-- Filter Controls and Separate PDF + Print Action Buttons -->
+            <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; padding-top:14px; border-top:1px solid var(--border);">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <label style="font-size:0.82rem; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+                  Time Range:
+                  <select id="reportTimeRange" class="filter-select">
+                    <option value="ALL">All Time</option>
+                    <option value="24h">Last 24 Hours</option>
+                    <option value="7d">Last 7 Days</option>
+                    <option value="30d">Last 30 Days</option>
+                  </select>
+                </label>
+              </div>
+
+              <!-- Two SEPARATE buttons: Download PDF and Print -->
+              <div style="display:flex; align-items:center; gap:10px;">
+                <button class="btn-header btn-primary" id="btnDownloadReportPdf" style="padding:9px 18px; font-size:0.88rem; font-weight:700;">
+                  📥 Download PDF
+                </button>
+                <button class="btn-header" id="btnPrintReport" style="padding:9px 18px; font-size:0.88rem; font-weight:700; background:#1e293b; border-color:#475569; color:#f8fafc;">
+                  🖨️ Print
+                </button>
+                <button class="btn-header" id="btnDownloadReportCsv" style="padding:9px 14px; font-size:0.84rem;">
+                  📊 CSV
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Generated Professional Report Document -->
+        <div class="report-paper" id="reportContentArea">
+          <!-- Report Header -->
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid var(--border); padding-bottom:16px; margin-bottom:20px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <img src="icon.png" alt="PhishGuard Shield" style="width:42px; height:42px;">
+              <div>
+                <h2 style="font-size:1.3rem; font-weight:800; color:var(--text-main); margin:0;" id="reportDocTitle">PhishGuard Enterprise Threat Assessment Report</h2>
+                <div style="font-size:0.82rem; color:var(--text-muted);" id="reportDocSubtitle">Endpoint Telemetry, Policy Enforcements & Threat Audit</div>
+              </div>
+            </div>
+            <div style="text-align:right; font-size:0.8rem; color:var(--text-muted);">
+              <div>Generated: <strong style="color:var(--text-main);" id="reportGeneratedTime">—</strong></div>
+              <div>Scope: <strong style="color:#38bdf8;" id="reportScopeLabel">All Systems</strong></div>
+            </div>
+          </div>
+
+          <!-- Single System Details Meta (shown when specific system selected) -->
+          <div id="reportSystemMetaCard" style="display:none; background:var(--bg-input); border:1px solid var(--border); border-radius:6px; padding:12px 16px; margin-bottom:20px; font-size:0.82rem;">
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px;">
+              <div><span style="color:var(--text-muted);">System Name:</span> <strong id="repMetaSysName" style="color:var(--text-main);">—</strong></div>
+              <div><span style="color:var(--text-muted);">Client ID:</span> <code id="repMetaClientId" style="color:#38bdf8;">—</code></div>
+              <div><span style="color:var(--text-muted);">Hostname:</span> <strong id="repMetaHostname">—</strong></div>
+              <div><span style="color:var(--text-muted);">Platform / OS:</span> <span id="repMetaOS">—</span></div>
+              <div><span style="color:var(--text-muted);">IP Address:</span> <code id="repMetaIP">—</code></div>
+              <div><span style="color:var(--text-muted);">Status:</span> <span id="repMetaStatus" class="badge-pill badge-allow">ONLINE</span></div>
+            </div>
+          </div>
+
+          <!-- Executive Threat Scan Summary Cards -->
+          <h3 style="font-size:0.95rem; font-weight:700; color:var(--text-main); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">1. Executive Threat Scan Summary</h3>
+          <div class="stats-row" style="margin-bottom:24px;">
+            <div class="stat-card">
+              <div class="stat-meta">
+                <span class="stat-title">Total Monitored</span>
+                <span class="stat-number" id="repTotalEvents">0</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-meta">
+                <span class="stat-title">Safe / Allowed</span>
+                <span class="stat-number" id="repAllowedEvents" style="color: #10b981;">0</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-meta">
+                <span class="stat-title">Phishing Interceptions</span>
+                <span class="stat-number" id="repBlockedEvents" style="color: #ef4444;">0</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-meta">
+                <span class="stat-title">Suspicious Warnings</span>
+                <span class="stat-number" id="repWarningEvents" style="color: #f59e0b;">0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Per-System Summary Counts Section (for All Systems or multi-system fleet) -->
+          <div id="reportPerSystemSection" style="margin-bottom: 24px;">
+            <h3 style="font-size:0.95rem; font-weight:700; color:var(--text-main); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">2. Summary Counts Per System / Endpoint</h3>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>System / Endpoint Name</th>
+                    <th>Safe Count</th>
+                    <th>Suspicious Count</th>
+                    <th>Phishing Count</th>
+                    <th>Total Analyzed</th>
+                  </tr>
+                </thead>
+                <tbody id="reportPerSystemTbody">
+                  <tr><td colspan="5" style="text-align:center; padding:12px; color:var(--text-muted);">No endpoint telemetry recorded yet.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Threat Details Table -->
+          <h3 style="font-size:0.95rem; font-weight:700; color:var(--text-main); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">3. Monitored URL History & Classification Audit Trail</h3>
+          <div class="table-responsive">
+            <table class="data-table" id="reportTable">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>System / Endpoint</th>
+                  <th>Destination Domain</th>
+                  <th>Destination URL</th>
+                  <th>Classification</th>
+                  <th>Threat Level</th>
+                  <th>Detection / Rule Information</th>
+                </tr>
+              </thead>
+              <tbody id="reportDetailedEventsTbody">
+                <tr><td colspan="7" style="text-align:center; padding:20px; color:var(--text-muted);">Loading real database report data...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- TAB 7: INSTALL & ENROLL EXTENSION -->
+      <!-- ======================================================== -->
+      <section class="tab-view" id="tab-install">
+        <!-- Prominent Download Banner Card -->
+        <div class="panel" style="border-left: 4px solid var(--accent-blue); background: linear-gradient(135deg, rgba(30,41,59,0.7) 0%, rgba(15,23,42,0.9) 100%); margin-bottom:20px;">
+          <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:20px;">
+            <div style="max-width: 680px;">
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                <span class="badge-pill badge-allow">ENTERPRISE PRODUCTION READY</span>
+                <span class="badge-pill" style="background:#1e293b; color:#94a3b8;">MANIFEST V3</span>
+                <span class="badge-pill" style="background:#1e293b; color:#38bdf8;" id="extVersionBadge">v1.4</span>
+              </div>
+              <h2 style="font-size:1.45rem; font-weight:700; color:var(--text-main); margin-bottom:8px;">
+                Install PhishGuard Extension
+              </h2>
+              <p style="font-size:0.88rem; color:var(--text-muted); line-height:1.6;">
+                Deploy the genuine Manifest V3 Chrome Extension onto client workstations. It intercepts top-level browser navigations, queries the central decision engine, presents warning/block interstitial pages for threats, and delivers telemetry directly to this dashboard.
+              </p>
+            </div>
+            <div>
+              <button class="btn-header btn-primary" id="btnDownloadExtMain" style="padding:14px 28px; font-size:1.05rem; font-weight:700; border-radius:var(--radius-md); box-shadow:0 8px 24px rgba(37,99,235,0.4); display:flex; align-items:center; gap:10px; cursor:pointer;">
+                <span style="font-size:1.3rem;">📥</span> DOWNLOAD EXTENSION (.ZIP)
+              </button>
+            </div>
+          </div>
+
+          <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border); display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
+            <div>
+              <label style="font-size:0.75rem; text-transform:uppercase; color:var(--text-dim); font-weight:700; display:block; margin-bottom:4px;">Server Target URL (Injected into extension):</label>
+              <div style="display:flex; gap:6px;">
+                <input type="text" id="targetServerUrlInput" class="form-control" style="font-family:monospace; font-size:0.85rem;" placeholder="e.g. http://localhost:3000">
+                <button class="btn-header" id="btnCopyServerUrl" title="Copy server URL">📋 Copy</button>
+              </div>
+              <small style="font-size:0.72rem; color:var(--text-muted); margin-top:3px; display:block;">Detected from your browser address. You can customize this if deploying to clients pointing to a remote LAN IP or cloud domain.</small>
+            </div>
+            <div>
+              <label style="font-size:0.75rem; text-transform:uppercase; color:var(--text-dim); font-weight:700; display:block; margin-bottom:4px;">Active Enrollment Token:</label>
+              <div style="display:flex; gap:6px;">
+                <input type="text" id="activeTokenDisplay" class="form-control" style="font-family:monospace; font-size:0.85rem; font-weight:700; color:#38bdf8;" readonly value="ENROLL-PHISHGUARD-2026">
+                <button class="btn-header" id="btnCopyActiveToken" title="Copy token">📋 Copy</button>
+              </div>
+              <small style="font-size:0.72rem; color:var(--text-muted); margin-top:3px; display:block;">Use this token to authorize remote workstation registration in the extension settings popup.</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step-by-Step Installation Instructions -->
+        <div class="panel" style="margin-bottom:20px;">
+          <div class="panel-header">
+            <div class="panel-title"><span>📋</span> Real Chrome Installation Instructions (Step-by-Step)</div>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(230px, 1fr)); gap:14px;">
+            <div style="background:var(--bg-input); border:1px solid var(--border); border-radius:var(--radius-md); padding:16px;">
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                <span style="background:#2563eb; color:#fff; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.8rem;">1</span>
+                <strong style="font-size:0.9rem; color:var(--text-main);">Download & Extract</strong>
+              </div>
+              <p style="font-size:0.82rem; color:var(--text-muted); line-height:1.5;">
+                Click <strong>DOWNLOAD EXTENSION</strong> above to download <code style="color:#38bdf8;">PhishGuard-Extension.zip</code>. Extract the archive onto your computer. You will see a folder named <code style="color:#38bdf8;">PhishGuard-Extension</code> containing <code style="color:#e2e8f0;">manifest.json</code>.
+              </p>
+            </div>
+
+            <div style="background:var(--bg-input); border:1px solid var(--border); border-radius:var(--radius-md); padding:16px;">
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                <span style="background:#2563eb; color:#fff; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.8rem;">2</span>
+                <strong style="font-size:0.9rem; color:var(--text-main);">Open Extensions Page</strong>
+              </div>
+              <p style="font-size:0.82rem; color:var(--text-muted); line-height:1.5;">
+                Open Google Chrome and navigate to:
+                <code style="background:#1e293b; color:#38bdf8; padding:3px 6px; border-radius:4px; display:inline-block; margin-top:4px; font-size:0.8rem;">chrome://extensions</code>
+                <br><span style="font-size:0.75rem; color:var(--text-dim);">(Or click ⋮ Menu &rarr; Extensions &rarr; Manage Extensions)</span>
+              </p>
+            </div>
+
+            <div style="background:var(--bg-input); border:1px solid var(--border); border-radius:var(--radius-md); padding:16px;">
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                <span style="background:#2563eb; color:#fff; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.8rem;">3</span>
+                <strong style="font-size:0.9rem; color:var(--text-main);">Enable Developer Mode</strong>
+              </div>
+              <p style="font-size:0.82rem; color:var(--text-muted); line-height:1.5;">
+                In the top-right corner of the Extensions page, toggle the switch labeled <strong>Developer mode</strong> to <strong>ON</strong>.
+              </p>
+            </div>
+
+            <div style="background:var(--bg-input); border:1px solid var(--border); border-radius:var(--radius-md); padding:16px;">
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                <span style="background:#2563eb; color:#fff; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.8rem;">4</span>
+                <strong style="font-size:0.9rem; color:var(--text-main);">Load Unpacked</strong>
+              </div>
+              <p style="font-size:0.82rem; color:var(--text-muted); line-height:1.5;">
+                Click the <strong>Load unpacked</strong> button on the top-left toolbar. In the file picker dialog, select the extracted <code style="color:#38bdf8;">PhishGuard-Extension</code> folder.
+              </p>
+            </div>
+
+            <div style="background:var(--bg-input); border:1px solid var(--border); border-radius:var(--radius-md); padding:16px;">
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                <span style="background:#10b981; color:#fff; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.8rem;">5</span>
+                <strong style="font-size:0.9rem; color:var(--text-main);">Enrolled & Protected!</strong>
+              </div>
+              <p style="font-size:0.82rem; color:var(--text-muted); line-height:1.5;">
+                PhishGuard Extension is now active! It automatically registers with this server, acquires a unique client ID, begins sending 30s heartbeats, and intercepts navigation. Verify it in the <strong>Enrolled Systems</strong> tab.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Token Management & Package Verification -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+          <!-- Fleet Enrollment Tokens -->
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title"><span>🔑</span> Enrollment Tokens Management</div>
+              <button class="btn-header btn-primary" id="btnOpenGenerateTokenModal">+ Generate Token</button>
+            </div>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">
+              Tokens authorize workstation fleet enrollment. Generate tokens for specific teams or departments with configurable use counts and expiry.
+            </p>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Token</th>
+                    <th>Status</th>
+                    <th>Uses</th>
+                    <th>Expires</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="tokensTableBody">
+                  <tr><td colspan="5" style="text-align:center; padding:15px;">Loading tokens...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Extension Source Package Verification -->
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title"><span>📦</span> Extension Package Components</div>
+              <button class="btn-header" id="btnRefreshPkgInfo">🔄 Verify Source Files</button>
+            </div>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">
+              These verified source files are packaged inside <code style="color:#38bdf8;">PhishGuard-Extension.zip</code>:
+            </p>
+            <div id="packageFilesList" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:0.8rem; font-family:monospace;">
+              <div style="padding:6px 10px; background:var(--bg-input); border-radius:4px; border:1px solid var(--border);">manifest.json (v3)</div>
+              <div style="padding:6px 10px; background:var(--bg-input); border-radius:4px; border:1px solid var(--border);">background.js</div>
+              <div style="padding:6px 10px; background:var(--bg-input); border-radius:4px; border:1px solid var(--border);">content.js</div>
+              <div style="padding:6px 10px; background:var(--bg-input); border-radius:4px; border:1px solid var(--border);">engine.js</div>
+              <div style="padding:6px 10px; background:var(--bg-input); border-radius:4px; border:1px solid var(--border);">popup.html & popup.js</div>
+              <div style="padding:6px 10px; background:var(--bg-input); border-radius:4px; border:1px solid var(--border);">warning.html & warning.js</div>
+              <div style="padding:6px 10px; background:var(--bg-input); border-radius:4px; border:1px solid var(--border);">gmail_content.js</div>
+              <div style="padding:6px 10px; background:var(--bg-input); border-radius:4px; border:1px solid var(--border);">qr_scanner.js</div>
+            </div>
+            <div style="margin-top:16px; padding:12px; background:rgba(6,182,212,0.1); border:1px solid rgba(6,182,212,0.3); border-radius:var(--radius-sm); font-size:0.8rem; color:#67e8f9;">
+              💡 <strong>Zero-Config Remote Setup:</strong> The ZIP download automatically pre-configures <code style="color:#fff;">DEFAULT_SERVER_URL</code> to match this active server address so the unpacked extension links without manual configuration.
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  </div> <!-- /#appShellRoot -->
+
+  <!-- ======================================================== -->
+  <!-- MODAL: ADD / EDIT RULE -->
+  <!-- ======================================================== -->
+  <div class="modal-backdrop" id="ruleModal">
+    <div class="modal-card">
+      <div class="modal-title">
+        <span id="ruleModalTitle">Create Security Policy Rule</span>
+        <button class="btn-header" onclick="closeRuleModal()">✕</button>
+      </div>
+
+      <form id="ruleForm">
+        <input type="hidden" id="ruleEditId" value="">
+        <div class="form-group">
+          <label>Decision Type</label>
+          <select id="ruleType" class="form-control" required>
+            <option value="BLOCK">BLOCK (Intercept navigation and display warning page)</option>
+            <option value="WARNING">WARNING (Alert user with amber caution badge)</option>
+            <option value="ALLOW">ALLOW (Enterprise whitelist, bypass heuristic scanning)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Pattern</label>
+          <input type="text" id="rulePattern" class="form-control" placeholder="e.g. *.malicious.xyz or bad-domain.com" required>
+        </div>
+
+        <div class="form-group">
+          <label>Target Type</label>
+          <select id="ruleTargetType" class="form-control">
+            <option value="domain">Domain</option>
+            <option value="wildcard">Wildcard Pattern (*)</option>
+            <option value="url">Full URL</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Severity</label>
+          <select id="ruleSeverity" class="form-control">
+            <option value="CRITICAL">CRITICAL</option>
+            <option value="HIGH" selected>HIGH</option>
+            <option value="MEDIUM">MEDIUM</option>
+            <option value="LOW">LOW</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Priority (1-1000)</label>
+          <input type="number" id="rulePriority" class="form-control" value="10" min="1" max="1000">
+        </div>
+
+        <div class="form-group">
+          <label>Description / Policy Justification</label>
+          <input type="text" id="ruleDescription" class="form-control" placeholder="Explain why this rule is applied">
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-header" onclick="closeRuleModal()">Cancel</button>
+          <button type="submit" class="btn-header btn-primary">Save Policy Rule</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: CLIENT DETAILS -->
+  <!-- ======================================================== -->
+  <div class="modal-backdrop" id="clientDetailModal">
+    <div class="modal-card" style="max-width:760px;">
+      <div class="modal-title">
+        <span id="clientDetailTitle">System Details</span>
+        <button class="btn-header" onclick="closeClientDetailModal()">✕</button>
+      </div>
+      <div id="clientDetailBody">Loading system details...</div>
+      <div class="modal-footer">
+        <button class="btn-header" onclick="closeClientDetailModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: GENERATE ENROLLMENT TOKEN -->
+  <!-- ======================================================== -->
+  <div class="modal-backdrop" id="tokenModal">
+    <div class="modal-card">
+      <div class="modal-title">
+        <span>Generate Fleet Enrollment Token</span>
+        <button class="btn-header" onclick="closeTokenModal()">✕</button>
+      </div>
+      <form id="tokenForm">
+        <div class="form-group">
+          <label>Description / Department Allocation</label>
+          <input type="text" id="tokenDescription" class="form-control" placeholder="e.g. Sales Laptop Rollout Q1" required>
+        </div>
+        <div class="form-group">
+          <label>Max Uses (Workstation Quota)</label>
+          <input type="number" id="tokenMaxUses" class="form-control" value="25" min="1" max="1000">
+        </div>
+        <div class="form-group">
+          <label>Validity Window (Days)</label>
+          <input type="number" id="tokenExpiresDays" class="form-control" value="30" min="1" max="365">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-header" onclick="closeTokenModal()">Cancel</button>
+          <button type="submit" class="btn-header btn-primary">Generate Token</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: EVALUATE URL CHECK -->
+  <!-- ======================================================== -->
+  <div class="modal-backdrop" id="checkUrlModal">
+    <div class="modal-card" style="max-width:600px;">
+      <div class="modal-title">
+        <span>⚡ Evaluate URL Threat & Rule Policy</span>
+        <button class="btn-header" onclick="closeCheckUrlModal()">✕</button>
+      </div>
+      <form id="checkUrlForm">
+        <div class="form-group">
+          <label>URL to Evaluate</label>
+          <input type="text" id="manualCheckUrlInput" class="form-control" placeholder="https://example.com/login" required>
+        </div>
+        <div style="display:flex; gap:8px; margin-bottom:14px;">
+          <button type="submit" class="btn-header btn-primary" id="btnRunManualCheck">Evaluate Decision</button>
+        </div>
+        <div id="manualCheckOutput" style="display:none; background:var(--bg-input); border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px;">
+          <div style="font-weight:600; font-size:0.88rem; margin-bottom:8px; display:flex; justify-content:space-between;">
+            <span>Engine Decision:</span>
+            <span id="manualCheckDecisionBadge"></span>
+          </div>
+          <div style="font-size:0.82rem; color:var(--text-muted); margin-bottom:4px;" id="manualCheckReason"></div>
+          <div style="font-size:0.76rem; color:var(--text-dim);" id="manualCheckDetails"></div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Message -->
+  <div id="toastMessage">
+    <span id="toastIcon">ℹ️</span>
+    <span id="toastText">Action completed</span>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/vendor/jspdf/dist/jspdf.umd.min.js"></script>
+  <script src="/vendor/jspdf-autotable/dist/jspdf.plugin.autotable.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

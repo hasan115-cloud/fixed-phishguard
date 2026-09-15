@@ -1,0 +1,24 @@
+{
+  "name": "phishguard",
+  "version": "1.4.0",
+  "description": "AI-Powered Phishing Detection Chrome Extension and Live Web Hub",
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "build": "node build.js",
+    "lint": "node -e 'console.log(\"Lint ok\")'"
+  },
+  "dependencies": {
+    "archiver": "^8.0.0",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.3",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
+    "jsqr": "^1.4.0",
+    "pg": "^8.23.0",
+    "serverless-http": "^4.0.0"
+  }
+}

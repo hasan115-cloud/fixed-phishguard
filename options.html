@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PhishGuard Extension — Remote Server Settings</title>
+<style>
+  :root {
+    --bg-main: #0b1120;
+    --bg-card: #131d33;
+    --bg-input: #080d19;
+    --border: #1f2d4d;
+    --accent: #0284c7;
+    --accent-hover: #0369a1;
+    --text: #f1f5f9;
+    --text-muted: #94a3b8;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+    background: var(--bg-main);
+    color: var(--text);
+    min-width: 480px;
+  }
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo { font-size: 2rem; }
+  h1 { font-size: 1.25rem; margin: 0 0 4px 0; color: #38bdf8; }
+  .subtitle { font-size: 0.82rem; color: var(--text-muted); margin: 0; }
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .form-group {
+    margin-bottom: 16px;
+  }
+  label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .help-text {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+  input[type="text"], input[type="url"] {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: #fff;
+    font-size: 0.9rem;
+    font-family: monospace;
+  }
+  input:focus {
+    outline: none;
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+  }
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  button {
+    padding: 9px 18px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s ease;
+  }
+  .btn-primary {
+    background: #0284c7;
+    color: #fff;
+  }
+  .btn-primary:hover { background: #0369a1; }
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .btn-secondary:hover {
+    background: rgba(255,255,255,0.05);
+    border-color: #475569;
+  }
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-top: 10px;
+  }
+  .status-badge.connected {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+  }
+  .status-badge.error {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+  .status-badge.testing {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+  }
+  .meta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 14px;
+    font-size: 0.8rem;
+  }
+  .meta-item {
+    background: var(--bg-input);
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+  .meta-item span {
+    color: var(--text-muted);
+    display: block;
+    font-size: 0.72rem;
+    margin-bottom: 2px;
+  }
+  .meta-item strong {
+    color: #38bdf8;
+    font-family: monospace;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">🛡️</div>
+  <div>
+    <h1>PhishGuard Extension</h1>
+    <p class="subtitle">Remote Server Connectivity & Endpoint Configuration</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="form-group">
+    <label>Connection Environment & Mode Presets</label>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px;">
+      <button type="button" class="btn-secondary" id="btnModeLocalhost" style="font-size:0.75rem; padding:6px 10px;">💻 Localhost (Dev)</button>
+      <button type="button" class="btn-secondary" id="btnModeLan" style="font-size:0.75rem; padding:6px 10px;">🏢 LAN (Internal Network)</button>
+      <button type="button" class="btn-secondary" id="btnModeRemote" style="font-size:0.75rem; padding:6px 10px;">☁️ Remote (Cloud / HTTPS)</button>
+      <button type="button" class="btn-secondary" id="btnModeAuto" style="font-size:0.75rem; padding:6px 10px; border-color:#38bdf8; color:#38bdf8;">⚡ Auto-Discovery</button>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="serverUrlInput">Central Security Server URL (API_BASE_URL)</label>
+    <input type="text" id="serverUrlInput" placeholder="http://localhost:3000 or https://your-domain.com">
+    <div class="help-text">
+      Enter the destination server hosting the PhishGuard dashboard. Supports Localhost, LAN IP (e.g. <code>http://192.168.1.100:3000</code>), or Remote Cloud HTTPS.
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="systemNameInput">System / Workstation Display Name</label>
+    <input type="text" id="systemNameInput" placeholder="e.g. Finance-Laptop-01">
+    <div class="help-text">Identifies this machine on the central enterprise security console.</div>
+  </div>
+
+  <div class="form-group">
+    <label for="enrollmentTokenInput">Fleet Enrollment Token</label>
+    <input type="text" id="enrollmentTokenInput" placeholder="Optional authorization token">
+  </div>
+
+  <div class="btn-row">
+    <button type="button" class="btn-primary" id="btnSave">Save & Apply Settings</button>
+    <button type="button" class="btn-secondary" id="btnTest">Test Connection</button>
+    <button type="button" class="btn-secondary" id="btnSyncRules">Sync Rules Now</button>
+  </div>
+
+  <div id="statusContainer"></div>
+
+  <div class="meta-grid">
+    <div class="meta-item">
+      <span>CLIENT ID</span>
+      <strong id="displayClientId">—</strong>
+    </div>
+    <div class="meta-item">
+      <span>CACHED RULES</span>
+      <strong id="displayRulesCount">—</strong>
+    </div>
+    <div class="meta-item">
+      <span>OFFLINE QUEUE</span>
+      <strong id="displayQueueCount">0 events</strong>
+    </div>
+    <div class="meta-item">
+      <span>LAST HEARTBEAT</span>
+      <strong id="displayLastHeartbeat">Never</strong>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="options.js"></script>
+</body>
+</html>

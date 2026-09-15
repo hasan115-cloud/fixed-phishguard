@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PhishGuard — Phishing Site Blocked</title>
+<style>
+    body {
+        margin: 0;
+        font-family: 'Segoe UI', Tahoma, sans-serif;
+        background: linear-gradient(135deg, #2a0a0a 0%, #1a0606 100%);
+        color: #fff;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+        box-sizing: border-box;
+    }
+    .container {
+        max-width: 680px;
+        width: 100%;
+        background: rgba(0,0,0,0.45);
+        border: 2px solid #dc3545;
+        border-radius: 16px;
+        padding: 36px;
+        text-align: center;
+        box-shadow: 0 4px 30px rgba(220,53,69,0.3);
+    }
+    .icon { font-size: 4.5rem; margin-bottom: 12px; }
+    h1 { font-size: 2rem; color: #ff6b7a; margin-bottom: 10px; }
+    .subtitle { color: #ddc; font-size: 1.02rem; margin-bottom: 20px; line-height: 1.5; }
+    .url-box {
+        background: rgba(255,255,255,0.05);
+        padding: 12px 16px;
+        border-radius: 8px;
+        word-break: break-all;
+        color: #ff9aa3;
+        font-family: monospace;
+        margin-bottom: 16px;
+        font-size: 0.95rem;
+        border: 1px solid rgba(220,53,69,0.4);
+        text-align: left;
+    }
+    .meta-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+    .score-pill {
+        display: inline-block;
+        background: rgba(220,53,69,0.25);
+        color: #ff6b7a;
+        font-weight: 700;
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        border: 1px solid rgba(220,53,69,0.4);
+    }
+    .meta-pill {
+        display: inline-block;
+        background: rgba(255,255,255,0.08);
+        color: #d1d5db;
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-size: 0.82rem;
+        border: 1px solid rgba(255,255,255,0.15);
+    }
+    .reasons {
+        background: rgba(255,255,255,0.04);
+        padding: 14px 18px;
+        border-radius: 8px;
+        text-align: left;
+        margin-bottom: 24px;
+    }
+    .reasons-title {
+        font-size: 0.82rem;
+        color: #f8b4ba;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .reasons ul { margin: 0; padding-left: 22px; }
+    .reasons li { padding: 4px 0; color: #f0d8da; font-size: 0.92rem; }
+    .btn-group { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 12px; }
+    .btn-primary {
+        background: #198754; color: #fff; border: none;
+        padding: 12px 28px; border-radius: 8px;
+        font-size: 1rem; font-weight: 700; cursor: pointer;
+        transition: background 0.2s;
+    }
+    .btn-primary:hover { background: #157445; }
+    .btn-secondary {
+        background: transparent; color: #888; border: 1px solid #555;
+        padding: 12px 24px; border-radius: 8px;
+        font-size: 0.88rem; cursor: pointer;
+    }
+    .btn-secondary:hover { color: #ccc; border-color: #999; }
+    .policy-lock {
+        font-size: 0.8rem;
+        color: #9ca3af;
+        margin-top: 6px;
+        display: none;
+    }
+    .footer { margin-top: 24px; color: #888; font-size: 0.78rem; line-height: 1.5; }
+
+    /* Suspicious theme */
+    body.suspicious { background: linear-gradient(135deg, #2a1f0a 0%, #1a1406 100%); }
+    body.suspicious .container { border-color: #f59e0b; box-shadow: 0 4px 30px rgba(245,158,11,0.3); }
+    body.suspicious h1 { color: #fbbf24; }
+    body.suspicious .url-box { color: #fcd34d; border-color: rgba(245,158,11,0.4); }
+    body.suspicious .score-pill { background: rgba(245,158,11,0.25); color: #fbbf24; border-color: rgba(245,158,11,0.4); }
+    body.suspicious .reasons-title { color: #fde68a; }
+
+    /* Bell Ringing Animation and Notification Bar */
+    @keyframes bellRing {
+        0% { transform: rotate(0); }
+        15% { transform: rotate(18deg); }
+        30% { transform: rotate(-18deg); }
+        45% { transform: rotate(12deg); }
+        60% { transform: rotate(-12deg); }
+        75% { transform: rotate(6deg); }
+        100% { transform: rotate(0); }
+    }
+    .bell-icon {
+        font-size: 1.25rem;
+        display: inline-block;
+    }
+    .bell-ringing {
+        animation: bellRing 0.7s ease-in-out infinite;
+    }
+    .alert-bell-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: rgba(220, 53, 69, 0.25);
+        border: 1px solid #dc3545;
+        border-radius: 8px;
+        padding: 8px 14px;
+        margin-bottom: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #fecaca;
+    }
+    body.suspicious .alert-bell-bar {
+        background: rgba(245, 158, 11, 0.25);
+        border-color: #f59e0b;
+        color: #fef3c7;
+    }
+    .btn-sound-control {
+        background: #dc3545;
+        color: #fff;
+        border: none;
+        padding: 5px 12px;
+        border-radius: 5px;
+        font-size: 0.78rem;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background 0.15s;
+    }
+    .btn-sound-control:hover { background: #bb2d3b; }
+    body.suspicious .btn-sound-control { background: #d97706; }
+    body.suspicious .btn-sound-control:hover { background: #b45309; }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="alert-bell-bar" id="alertBellBar">
+        <div style="display:flex;align-items:center;gap:8px;">
+            <span class="bell-icon bell-ringing" id="bellIcon">🔔</span>
+            <span id="bellText">AUDIBLE SECURITY THREAT ALARM TRIGGERED</span>
+        </div>
+        <button type="button" class="btn-sound-control" id="btnSoundControl">🔊 Alarm Sounding</button>
+    </div>
+
+    <div class="icon" id="warningIcon">🛑</div>
+    <h1 id="warningHeading">Phishing Site Blocked</h1>
+    <div class="subtitle" id="warningSubtitle">
+        PhishGuard has detected this website as a confirmed security threat
+        and blocked access to protect your system and enterprise data.
+    </div>
+
+    <div class="url-box" id="blockedUrl">Loading target...</div>
+
+    <div class="meta-badges">
+        <div class="score-pill" id="scorePill">Threat Level: CRITICAL</div>
+        <div class="meta-pill" id="rulePill" style="display:none;">Matched Rule: —</div>
+        <div class="meta-pill" id="clientPill" style="display:none;">Protected System: —</div>
+        <div class="meta-pill" id="timePill">Scanned: Just now</div>
+    </div>
+
+    <div class="reasons" id="reasonsBlock" style="display:none;">
+        <div class="reasons-title">Specific Threat Analysis Factors</div>
+        <ul id="reasonsList"></ul>
+    </div>
+
+    <div class="btn-group">
+        <button class="btn-primary" id="btnBack">← Return to Safety</button>
+        <button class="btn-secondary" id="btnProceed" style="display:none;">I understand the risk, proceed anyway</button>
+    </div>
+    <div class="policy-lock" id="policyLock">🔒 Administrator Policy: Direct bypass is disabled for this organization.</div>
+
+    <div class="footer">
+        Protected by PhishGuard Enterprise Browser Security Hub<br>
+        If this is an authorized business portal, please contact your security administrator to request a whitelist rule.
+    </div>
+</div>
+
+<script src="warning.js"></script>
+</body>
+</html>

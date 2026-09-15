@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PhishGuard Extension</title>
+<style>
+    body {
+        width: 340px;
+        margin: 0;
+        padding: 14px;
+        font-family: 'Segoe UI', Tahoma, sans-serif;
+        background: #131f33;
+        color: #e4e9f0;
+    }
+    .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #1c2840;
+        margin-bottom: 10px;
+    }
+    .brand-wrap { display: flex; align-items: center; gap: 8px; }
+    .brand { font-weight: 700; font-size: 1rem; color: #22c1dc; }
+    .tagline { font-size: 0.68rem; color: #6b7d99; }
+
+    /* Enterprise connection badge */
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .enterprise-badge {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        background: #0e1726;
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 0.68rem;
+        color: #94a3b8;
+        border: 1px solid #1e293b;
+    }
+    .status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #10b981;
+    }
+    .status-dot.offline { background: #ef4444; }
+
+    .btn-gear {
+        background: #1e293b;
+        border: 1px solid #334155;
+        color: #94a3b8;
+        border-radius: 6px;
+        padding: 3px 6px;
+        font-size: 0.75rem;
+        cursor: pointer;
+    }
+    .btn-gear:hover { color: #fff; background: #334155; }
+
+    /* Inline Server Config */
+    .config-panel {
+        background: #0b1322;
+        border: 1px solid #1e293b;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 10px;
+        font-size: 0.75rem;
+    }
+    .config-title {
+        font-weight: 600;
+        color: #38bdf8;
+        margin-bottom: 6px;
+        display: flex;
+        justify-content: space-between;
+    }
+    .config-input {
+        width: 100%;
+        box-sizing: border-box;
+        background: #131f33;
+        border: 1px solid #334155;
+        color: #f1f5f9;
+        padding: 6px 8px;
+        border-radius: 5px;
+        font-size: 0.74rem;
+        margin-bottom: 6px;
+    }
+    .config-actions {
+        display: flex;
+        gap: 6px;
+        justify-content: flex-end;
+    }
+    .btn-config-save {
+        background: #0284c7;
+        color: #fff;
+        border: none;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 0.72rem;
+        cursor: pointer;
+    }
+    .btn-config-save:hover { background: #0369a1; }
+
+    .url-box {
+        background: #0e1726;
+        padding: 7px 10px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        word-break: break-all;
+        color: #7fc8ff;
+        margin-bottom: 10px;
+    }
+
+    /* Verdict card */
+    .verdict-card { text-align:center; padding:14px; border-radius:10px; margin-bottom:10px; }
+    .vc-safe      { background: rgba(25,135,84,0.18); }
+    .vc-suspicious{ background: rgba(255,193,7,0.18); }
+    .vc-phishing  { background: rgba(220,53,69,0.18); }
+    .vc-loading   { background: #1c2840; }
+    .verdict-icon  { font-size:2rem; margin-bottom:4px; }
+    .verdict-label { font-weight:700; font-size:1.15rem; }
+    .verdict-score { font-size:0.85rem; opacity:0.85; margin-top:4px; }
+    .verdict-safe      { color:#4ade80; }
+    .verdict-suspicious{ color:#ffc107; }
+    .verdict-phishing  { color:#ff6b7a; }
+
+    /* Reasons */
+    .reasons-title { font-size:0.72rem; text-transform:uppercase; color:#6b7d99; margin-bottom:5px; }
+    .reason-item {
+        font-size:0.78rem; padding:5px 8px; margin-bottom:4px;
+        background:#0e1726; border-radius:5px; color:#c4cfe0;
+    }
+
+    /* Page stats bar */
+    .stats-bar {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 10px;
+        font-size: 0.75rem;
+    }
+    .stat-chip {
+        flex: 1;
+        text-align: center;
+        padding: 5px 4px;
+        border-radius: 6px;
+        font-weight: 600;
+    }
+    .stat-phishing  { background: rgba(220,53,69,0.2);  color: #ff6b7a; }
+    .stat-suspicious{ background: rgba(255,193,7,0.18); color: #ffc107; }
+    .stat-safe      { background: rgba(25,135,84,0.18); color: #4ade80; }
+    .stat-total     { background: rgba(79,209,255,0.1); color: #4fd1ff; }
+
+    /* Trust domain */
+    .trust-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+        font-size: 0.76rem;
+        color: #6b7d99;
+    }
+    .btn-trust {
+        flex-shrink: 0;
+        background: transparent;
+        color: #4fd1ff;
+        border: 1px solid #4fd1ff;
+        padding: 4px 10px;
+        border-radius: 5px;
+        font-size: 0.74rem;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    .btn-trust:hover   { background: rgba(79,209,255,0.12); }
+    .btn-trust.trusted { color: #4ade80; border-color: #4ade80; cursor: default; }
+    .btn-untrust {
+        background: transparent;
+        color: #ff6b7a;
+        border: none;
+        font-size: 0.7rem;
+        cursor: pointer;
+        padding: 0;
+        text-decoration: underline;
+    }
+
+    /* Rescan button */
+    .btn-rescan {
+        width:100%; background:#1eb163; color:#fff;
+        border:none; padding:9px; border-radius:6px;
+        font-weight:600; cursor:pointer; margin-top:6px;
+    }
+    .btn-rescan:hover     { background:#179c54; }
+    .btn-rescan:disabled  { background:#2a3a52; cursor:not-allowed; }
+
+    /* Central Dashboard Button */
+    .btn-dashboard {
+        width: 100%;
+        background: #1e293b;
+        color: #38bdf8;
+        border: 1px solid #334155;
+        padding: 7px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+    .btn-dashboard:hover { background: #334155; }
+
+    /* Recently scanned */
+    .recent-section { margin-top:10px; }
+    .recent-toggle {
+        width:100%; background:transparent; border:none; color:#6b7d99;
+        font-size:0.72rem; text-align:left; cursor:pointer; padding:4px 0;
+        display:flex; align-items:center; justify-content:space-between;
+    }
+    .recent-toggle:hover { color:#9aabc4; }
+    .recent-list { margin-top:5px; }
+    .recent-item {
+        display:flex; align-items:center; gap:6px;
+        padding:5px 7px; border-radius:5px; margin-bottom:3px;
+        background:#0e1726; font-size:0.72rem; cursor:pointer;
+    }
+    .recent-item:hover { background:#16263b; }
+    .recent-url { flex:1; color:#7fc8ff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .recent-verdict { flex-shrink:0; font-weight:700; font-size:0.68rem; }
+    .rv-phishing  { color:#ff6b7a; }
+    .rv-suspicious{ color:#ffc107; }
+    .rv-safe      { color:#4ade80; }
+
+    /* Sound toggle & Bell animation */
+    @keyframes bellRing {
+        0% { transform: rotate(0); }
+        15% { transform: rotate(18deg); }
+        30% { transform: rotate(-18deg); }
+        45% { transform: rotate(12deg); }
+        60% { transform: rotate(-12deg); }
+        75% { transform: rotate(6deg); }
+        100% { transform: rotate(0); }
+    }
+    .sound-btn {
+        background: transparent; border: none; color: #6b7d99;
+        font-size: 0.95rem; cursor: pointer; padding: 2px 4px;
+        display: inline-block;
+        transition: transform 0.2s, color 0.2s;
+    }
+    .sound-btn:hover { color: #9aabc4; }
+    .sound-btn.bell-ringing {
+        animation: bellRing 0.7s ease-in-out infinite;
+        color: #f59e0b !important;
+        text-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+    }
+
+    .footer {
+        text-align:center; font-size:0.66rem; color:#6b7d99;
+        margin-top:10px; padding-top:8px; border-top:1px solid #1c2840;
+        display:flex; align-items:center; justify-content:space-between;
+    }
+    .spinner {
+        display:inline-block; width:18px; height:18px;
+        border:3px solid #28395a; border-top:3px solid #4fd1ff;
+        border-radius:50%; animation:spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div class="brand-wrap">
+        <div style="font-size:1.3rem;">🛡️</div>
+        <div>
+            <div class="brand">PhishGuard Extension</div>
+            <div class="tagline">Enterprise Endpoint Defense</div>
+        </div>
+    </div>
+    <div class="header-actions">
+        <div class="enterprise-badge" id="clientStatusBadge" title="Central Enterprise Security Server status">
+            <span class="status-dot" id="serverDot"></span>
+            <span id="clientIdLabel">CLIENT-LOCAL</span>
+        </div>
+        <button class="btn-gear" id="btnToggleConfig" title="Configure Central Server URL">⚙️</button>
+    </div>
+</div>
+
+<!-- Inline Server Config Drawer -->
+<div id="configPanel" class="config-panel" style="display:none;">
+    <div class="config-title">
+        <span>Central Server Configuration</span>
+        <a href="#" id="btnOpenOptions" style="color:#38bdf8;text-decoration:none;font-size:0.7rem;">More Options ↗</a>
+    </div>
+    <input type="text" id="popupServerUrl" class="config-input" placeholder="http://server-ip:3000" />
+    <div class="config-actions">
+        <button id="btnSaveConfig" class="btn-config-save">Save & Connect</button>
+    </div>
+    <div id="configStatusMsg" style="margin-top:4px;font-size:0.68rem;color:#94a3b8;"></div>
+</div>
+
+<div class="url-box" id="currentUrl">Loading URL...</div>
+
+<div id="verdictArea" class="verdict-card vc-loading">
+    <div class="spinner"></div>
+    <div style="margin-top:6px;font-size:0.85rem;color:#9aabc4;">Evaluating threat indicators...</div>
+</div>
+
+<!-- Hidden container for background threat intel if needed -->
+<div id="threatIntelArea" style="display:none;"></div>
+
+<div id="reasonsArea" style="display:none;">
+    <div class="reasons-title">Specific Threat Factors</div>
+    <div id="reasonsList"></div>
+</div>
+
+<!-- Page link scan stats -->
+<div id="statsBar" class="stats-bar" style="display:none;">
+    <div class="stat-chip stat-total"  id="statTotal">0 scanned</div>
+    <div class="stat-chip stat-phishing"   id="statPhishing">0 phishing</div>
+    <div class="stat-chip stat-suspicious" id="statSuspicious">0 suspicious</div>
+    <div class="stat-chip stat-safe"   id="statSafe">0 safe</div>
+</div>
+
+<!-- Trust domain -->
+<div class="trust-row" id="trustRow" style="display:none;">
+    <span id="trustLabel">Trust this domain?</span>
+    <button class="btn-trust" id="trustBtn">+ Trust</button>
+    <button class="btn-untrust" id="untrustBtn" style="display:none;">Remove</button>
+</div>
+
+<button id="rescanBtn" class="btn-rescan">🔄 Re-scan Page Now</button>
+<button id="dashboardBtn" class="btn-dashboard">📊 Open Central Admin Console</button>
+
+<!-- Recently scanned -->
+<div class="recent-section" id="recentSection" style="display:none;">
+    <button class="recent-toggle" id="recentToggleBtn">
+        <span>🕘 Recent Security Events</span>
+        <span id="recentChevron">▾</span>
+    </button>
+    <div id="recentList" class="recent-list" style="display:none;"></div>
+</div>
+
+<div class="footer">
+    <span id="versionLabel">PhishGuard v2.0 Enterprise</span>
+    <button class="sound-btn" id="soundBtn" title="Toggle audio alert alerts">🔔</button>
+</div>
+
+<script src="popup.js"></script>
+</body>
+</html>
